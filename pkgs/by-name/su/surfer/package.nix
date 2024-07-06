@@ -8,6 +8,9 @@
   autoPatchelfHook,
   libxkbcommon,
   libGL,
+  libX11,
+  libXcursor,
+  libXi,
   stdenv,
 }:
 rustPlatform.buildRustPackage rec {
@@ -40,6 +43,9 @@ rustPlatform.buildRustPackage rec {
     wayland
     libxkbcommon
     libGL
+    libX11
+    libXcursor
+    libXi
   ];
 
   cargoLock = {
