@@ -91,6 +91,9 @@ let
       "x86_64-linux"
       "aarch64-linux"
     ];
+    knownVulnerabilities = [
+      "https://github.com/clash-verge-rev/clash-verge-rev/issues/3428"
+    ];
   };
 in
 stdenv.mkDerivation {
