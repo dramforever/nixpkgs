@@ -9578,6 +9578,8 @@ with pkgs;
     withKexectools = false;
     withLibseccomp = false;
     withNspawn = false;
+    withNsresourced = false;
+    withMountfsd = false;
   };
   systemdLibs = systemdMinimal.override {
     pname = "systemd-minimal-libs";

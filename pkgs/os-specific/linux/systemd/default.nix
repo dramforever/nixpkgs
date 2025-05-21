@@ -162,6 +162,8 @@
   # attempt to load a service which does not exist, resulting in errors.
   withUtmp ? !stdenv.hostPlatform.isMusl,
   withVmspawn ? true,
+  withNsresourced ? true,
+  withMountfsd ? true,
   # kernel-install shouldn't usually be used on NixOS, but can be useful, e.g. for
   # building disk images for non-NixOS systems. To save users from trying to use it
   # on their live NixOS system, we disable it by default.
@@ -194,6 +196,7 @@ assert withImportd -> (withGcrypt || withOpenSSL);
 assert withUkify -> (withEfi && withBootloader);
 assert withRepart -> withCryptsetup;
 assert withBootloader -> withEfi;
+assert withNsresourced -> withLibBPF;
 
 let
   wantCurl = withRemote || withImportd;
@@ -571,6 +574,8 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonBool "hwdb" withHwdb)
     (lib.mesonBool "timedated" withTimedated)
     (lib.mesonBool "timesyncd" withTimesyncd)
+    (lib.mesonBool "nsresourced" withNsresourced)
+    (lib.mesonBool "mountfsd" withMountfsd)
     (lib.mesonBool "userdb" withUserDb)
     (lib.mesonBool "coredump" withCoredump)
     (lib.mesonBool "firstboot" withFirstboot)
@@ -909,6 +914,8 @@ stdenv.mkDerivation (finalAttrs: {
       withPortabled
       withSysupdate
       withTimedated
+      withNsresourced
+      withMountfsd
       withTpm2Tss
       withUtmp
       util-linux
