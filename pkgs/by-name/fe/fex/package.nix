@@ -131,6 +131,8 @@ llvmPackages.stdenv.mkDerivation (finalAttrs: {
     '';
   };
 
+  patches = [ ./fix_unittests_createDiagnostics_llvm_21.patch ];
+
   postPatch = ''
     substituteInPlace ThunkLibs/GuestLibs/CMakeLists.txt ThunkLibs/HostLibs/CMakeLists.txt \
       --replace-fail "/usr/include/libdrm" "${devRootFS}/include/libdrm" \
