@@ -1,0 +1,91 @@
+From 5af2477d005bb0ab8b11633a678ed5f6121f81b6 Mon Sep 17 00:00:00 2001
+From: dramforever <dramforever@live.com>
+Date: Wed, 15 Oct 2025 12:02:15 +0800
+Subject: [PATCH] unittests/ThunkLibs: Fix build with LLVM 21
+
+---
+ unittests/ThunkLibs/abi.cpp       |  5 ++++-
+ unittests/ThunkLibs/common.h      | 12 ++++++++++++
+ unittests/ThunkLibs/generator.cpp | 10 +++++++++-
+ 3 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/unittests/ThunkLibs/abi.cpp b/unittests/ThunkLibs/abi.cpp
+index 182e0e0f0..9a838523a 100644
+--- a/unittests/ThunkLibs/abi.cpp
++++ b/unittests/ThunkLibs/abi.cpp
+@@ -99,7 +99,10 @@ public:
+   bool runInvocation(std::shared_ptr<clang::CompilerInvocation> invocation, clang::FileManager* files,
+                      std::shared_ptr<clang::PCHContainerOperations> pch, clang::DiagnosticConsumer* diag_consumer) override {
+ 
+-#if LLVM_VERSION_MAJOR >= 20
++#if LLVM_VERSION_MAJOR >= 21
++    auto diagnostics =
++      clang::CompilerInstance::createDiagnostics(files->getVirtualFileSystem(), invocation->getDiagnosticOpts(), diag_consumer, false);
++#elif LLVM_VERSION_MAJOR == 20
+     auto diagnostics =
+       clang::CompilerInstance::createDiagnostics(files->getVirtualFileSystem(), &invocation->getDiagnosticOpts(), diag_consumer, false);
+ #else
+diff --git a/unittests/ThunkLibs/common.h b/unittests/ThunkLibs/common.h
+index 0c89e97ba..ce57b5c05 100644
+--- a/unittests/ThunkLibs/common.h
++++ b/unittests/ThunkLibs/common.h
+@@ -18,9 +18,15 @@ class TestDiagnosticConsumer : public clang::TextDiagnosticPrinter {
+   std::optional<std::string> first_error;
+ 
+ public:
++#if LLVM_VERSION_MAJOR >= 21
++  TestDiagnosticConsumer(bool silent_, clang::DiagnosticOptions& diag_opts)
++    : clang::TextDiagnosticPrinter(llvm::errs(), diag_opts)
++    , silent(silent_) {}
++#else
+   TestDiagnosticConsumer(bool silent_)
+     : clang::TextDiagnosticPrinter(llvm::errs(), new clang::DiagnosticOptions)
+     , silent(silent_) {}
++#endif
+ 
+   void HandleDiagnostic(clang::DiagnosticsEngine::Level level, const clang::Diagnostic& diag) override {
+     if (level >= clang::DiagnosticsEngine::Error && !first_error) {
+@@ -118,7 +124,13 @@ struct fex_gen_config;
+ 
+   auto invocation = clang::tooling::ToolInvocation(args, &action, files.get(), std::make_shared<clang::PCHContainerOperations>());
+ 
++#if LLVM_VERSION_MAJOR >= 21
++  clang::DiagnosticOptions diag_opts;
++  TestDiagnosticConsumer consumer(silent, diag_opts);
++#else
+   TestDiagnosticConsumer consumer(silent);
++#endif
++
+   invocation.setDiagnosticConsumer(&consumer);
+ 
+   // Process the actual ToolAction.
+diff --git a/unittests/ThunkLibs/generator.cpp b/unittests/ThunkLibs/generator.cpp
+index c5644a2c8..0743c12ad 100644
+--- a/unittests/ThunkLibs/generator.cpp
++++ b/unittests/ThunkLibs/generator.cpp
+@@ -188,13 +188,21 @@ SourceWithAST::SourceWithAST(std::string_view input, bool silent_compile)
+ 
+     bool runInvocation(std::shared_ptr<clang::CompilerInvocation> invocation, clang::FileManager* files,
+                        std::shared_ptr<clang::PCHContainerOperations> pch, clang::DiagnosticConsumer* diag_consumer) override {
+-#if LLVM_VERSION_MAJOR >= 20
++#if LLVM_VERSION_MAJOR >= 21
++      auto diagnostics =
++        clang::CompilerInstance::createDiagnostics(files->getVirtualFileSystem(), invocation->getDiagnosticOpts(), diag_consumer, false);
++#elif LLVM_VERSION_MAJOR == 20
+       auto diagnostics =
+         clang::CompilerInstance::createDiagnostics(files->getVirtualFileSystem(), &invocation->getDiagnosticOpts(), diag_consumer, false);
+ #else
+       auto diagnostics = clang::CompilerInstance::createDiagnostics(&invocation->getDiagnosticOpts(), diag_consumer, false);
+ #endif
++
++#if LLVM_VERSION_MAJOR >= 21
++      ast = clang::ASTUnit::LoadFromCompilerInvocation(invocation, std::move(pch), nullptr, std::move(diagnostics), files);
++#else
+       ast = clang::ASTUnit::LoadFromCompilerInvocation(invocation, std::move(pch), std::move(diagnostics), files);
++#endif
+       return (ast != nullptr);
+     }
+   } tool_action {ast};
+-- 
+2.51.0
+
