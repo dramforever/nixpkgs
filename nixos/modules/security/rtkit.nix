@@ -63,8 +63,6 @@ in
           "${package}/libexec/rtkit-daemon ${utils.escapeSystemdExecArgs cfg.args}"
         ];
 
-        # Needs to verify the user of the processes.
-        PrivateUsers = "full";
         # Needs to access other processes to modify their scheduling modes.
         ProcSubset = "all";
         ProtectProc = "default";
