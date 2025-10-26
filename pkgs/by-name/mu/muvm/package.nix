@@ -52,16 +52,16 @@ let
 in
 rustPlatform.buildRustPackage rec {
   pname = "muvm";
-  version = "0.4.1";
+  version = "0.4.1-unstable-2025-11-14";
 
   src = fetchFromGitHub {
     owner = "AsahiLinux";
     repo = "muvm";
-    rev = "muvm-${version}";
-    hash = "sha256-1XPhVEj7iqTxdWyYwNk6cbb9VRGuhpvvowYDPJb1cWU=";
+    rev = "51c3960cb148d5024e2b3eb6027bc068fbe5e04f";
+    hash = "sha256-MD794HhR41dWYmzzqmSOgQvHKSVhu5tAIJs7Utlma/Y=";
   };
 
-  cargoHash = "sha256-fkvdS0c1Ib8Kto44ou06leXy731cpMHXevyFR5RROt4=";
+  cargoHash = "sha256-Le7dOddGpyysq0TbVLCcMMYeMBf7dNnbN7n+bYBPFKo=";
 
   postPatch = ''
     substituteInPlace crates/muvm/src/guest/bin/muvm-guest.rs \
