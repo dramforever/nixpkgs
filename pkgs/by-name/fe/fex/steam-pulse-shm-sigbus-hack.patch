@@ -1,0 +1,38 @@
+From b093fc768b059d0a88a2901264083a372d35a938 Mon Sep 17 00:00:00 2001
+From: dramforever <dramforever@live.com>
+Date: Sun, 26 Oct 2025 03:18:45 +0800
+Subject: [PATCH] HACK: Steam /dev/shm/pulse-shm-* on virtiofs SIGBUS
+ workaround hack
+
+---
+ .../LinuxSyscalls/SignalDelegator.cpp              | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/Source/Tools/LinuxEmulation/LinuxSyscalls/SignalDelegator.cpp b/Source/Tools/LinuxEmulation/LinuxSyscalls/SignalDelegator.cpp
+index 259325f03..d462ab6ce 100644
+--- a/Source/Tools/LinuxEmulation/LinuxSyscalls/SignalDelegator.cpp
++++ b/Source/Tools/LinuxEmulation/LinuxSyscalls/SignalDelegator.cpp
+@@ -59,6 +59,20 @@ static FEX::HLE::ThreadStateObject* GetThreadFromAltStack(const stack_t& alt_sta
+ 
+ static void SignalHandlerThunk(int Signal, siginfo_t* Info, void* UContext) {
+   ucontext_t* _context = (ucontext_t*)UContext;
++  if (Signal == SIGBUS && Info->si_code != BUS_ADRALN) {
++    // HACK: Grossly unsafe
++    system("chmod +w /dev/shm/pulse-shm-*");
++
++    struct sigaction act = { .sa_handler = SIG_DFL };
++    struct sigaction oldact;
++
++    sigaction(SIGBUS, &act, &oldact);
++    volatile char *ptr = (volatile char *)Info->si_addr;
++    *ptr = *ptr; // If it still wouldn't work, actually crash
++    sigaction(SIGBUS, &oldact, NULL);
++
++    return;
++  }
+   auto ThreadObject = GetThreadFromAltStack(_context->uc_stack);
+   FEXCORE_PROFILE_ACCUMULATION(ThreadObject->Thread, AccumulatedSignalTime);
+   ThreadObject->SignalInfo.Delegator->HandleSignal(ThreadObject, Signal, Info, UContext);
+-- 
+2.51.0
+

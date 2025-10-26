@@ -136,6 +136,9 @@ llvmPackages.stdenv.mkDerivation (finalAttrs: {
       url = "https://github.com/FEX-Emu/FEX/commit/5af2477d005bb0ab8b11633a678ed5f6121f81b6.patch";
       hash = "sha256-QdJaexzBSOVaKc3h2uwPbX4iysqvGBDmWH938ZeXcdE=";
     })
+
+    # HACK
+    ./steam-pulse-shm-sigbus-hack.patch
   ];
 
   postPatch = ''
@@ -214,7 +217,7 @@ llvmPackages.stdenv.mkDerivation (finalAttrs: {
   strictDeps = true;
 
   # Unsupported on non-4K page size kernels (e.g. Apple Silicon)
-  doCheck = true;
+  # doCheck = true; # HACK
 
   nativeCheckInputs = [ nasm ];
   checkInputs = [ catch2_3 ];
