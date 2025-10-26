@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchpatch,
   rustPlatform,
   libkrun,
   passt,
@@ -62,6 +63,15 @@ rustPlatform.buildRustPackage rec {
   };
 
   cargoHash = "sha256-Le7dOddGpyysq0TbVLCcMMYeMBf7dNnbN7n+bYBPFKo=";
+
+  patches = [
+    # https://github.com/AsahiLinux/muvm/pull/203
+    (fetchpatch {
+      name = "xdg-runtime-dir-in-run.patch";
+      url = "https://github.com/dramforever/muvm/commit/183f414e18f9d940a2b056d3f06ad62d9afedf34.patch?full_index=1";
+      hash = "sha256-2XNu3TsJaaIZAHlVrIff4hUIIm/jeVN4Ne9feBpdhI8=";
+    })
+  ];
 
   postPatch = ''
     substituteInPlace crates/muvm/src/guest/bin/muvm-guest.rs \
