@@ -587,6 +587,13 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonBool "smack" true)
     (lib.mesonBool "b_pie" true)
   ]
+  ++ lib.optionals withLibBPF [
+    (lib.mesonOption "vmlinux-h" "provided")
+
+    # This has to be its own directory, because its dirname is added to the
+    # eBPF compilation include paths so `#include "vmlinux.h"` can find it.
+    (lib.mesonOption "vmlinux-h-path" "${./vmlinux-h-path}/vmlinux.h")
+  ]
   ++ lib.optionals withVConsole [
     (lib.mesonOption "loadkeys-path" "${kbd}/bin/loadkeys")
     (lib.mesonOption "setfont-path" "${kbd}/bin/setfont")
