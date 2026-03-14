@@ -1230,7 +1230,7 @@ in
   ];
 
   meta = {
-    teams = [ lib.teams.acme ];
+    maintainers = lib.teams.acme.members;
     doc = ./default.md;
   };
 }
